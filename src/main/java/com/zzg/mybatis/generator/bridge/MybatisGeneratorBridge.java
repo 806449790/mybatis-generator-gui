@@ -1,7 +1,5 @@
 package com.zzg.mybatis.generator.bridge;
 
-import com.jcraft.jsch.Session;
-import com.zzg.mybatis.generator.controller.PictureProcessStateController;
 import com.zzg.mybatis.generator.model.DatabaseConfig;
 import com.zzg.mybatis.generator.model.DbType;
 import com.zzg.mybatis.generator.model.GeneratorConfig;
@@ -249,7 +247,7 @@ public class MybatisGeneratorBridge {
 
         context.setTargetRuntime("MyBatis3");
         //覆盖默认的TargetRuntime
-        if (ConfigManage.isMyPlus) {
+        if (ConfigManage.myPlusIfOpen) {
             context.setTargetRuntime(ConfigManage.myTargetRuntime);
         }
         List<String> warnings = new ArrayList<>();

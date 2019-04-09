@@ -19,7 +19,7 @@ public class MyIntrospectedTable extends IntrospectedTableMyBatis3Impl {
 
     @Override
     protected void calculateXmlMapperGenerator(AbstractJavaClientGenerator javaClientGenerator, List<String> warnings, ProgressCallback progressCallback) {
-        if (ConfigManage.isMyPlus) {
+        if (ConfigManage.myPlusIfOpen) {
             //添加自定义的 XMLMapperGenerator
             xmlMapperGenerator = new MyXMLMapperGenerator();
             initializeAbstractGenerator(xmlMapperGenerator, warnings, progressCallback);
@@ -30,7 +30,7 @@ public class MyIntrospectedTable extends IntrospectedTableMyBatis3Impl {
 
     @Override
     protected AbstractJavaClientGenerator createJavaClientGenerator() {
-        if (ConfigManage.isMyPlus && context.getJavaClientGeneratorConfiguration() != null) {
+        if (ConfigManage.myPlusIfOpen && context.getJavaClientGeneratorConfiguration() != null) {
             //添加自定义的 JavaMapperGenerator
             return new MyJavaMapperGenerator();
         }

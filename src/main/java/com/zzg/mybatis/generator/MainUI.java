@@ -1,6 +1,7 @@
 package com.zzg.mybatis.generator;
 
 import com.zzg.mybatis.generator.controller.MainUIController;
+import com.zzg.mybatis.generator.myplus.config.ConfigManage;
 import com.zzg.mybatis.generator.util.ConfigHelper;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -23,6 +24,7 @@ public class MainUI extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
+		ConfigManage.start();
 		ConfigHelper.createEmptyFiles();
 		URL url = Thread.currentThread().getContextClassLoader().getResource("fxml/MainUI.fxml");
 		FXMLLoader fxmlLoader = new FXMLLoader(url);
