@@ -76,7 +76,7 @@ public class MySelectByEntityXmlElementGenerator extends AbstractXmlElementGener
 
             sb.setLength(0);
             sb.append(" and ");
-            sb.append(introspectedColumn.getJavaProperty());
+            sb.append(introspectedColumn.getActualColumnName());
             sb.append(" = ");
             sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
             notNullElement.addElement(new TextElement(sb.toString()));
