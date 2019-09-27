@@ -3,7 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.zzg</groupId>
     <artifactId>mybatis-generator-gui</artifactId>
+    <packaging>pom</packaging>
     <version>0.8.8-SNAPSHOT</version>
+    <modules>
+        <module>mybatis-plus-generator</module>
+        <module>mybatis-generator</module>
+    </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -12,6 +17,7 @@
     </properties>
 
     <dependencies>
+
         <dependency>
             <groupId>org.mybatis.generator</groupId>
             <artifactId>mybatis-generator-core</artifactId>
@@ -67,6 +73,22 @@
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
             <version>0.1.54</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-freemarker</artifactId>
+            <version>2.0.5.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>6.0.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.2</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
