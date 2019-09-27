@@ -33,6 +33,10 @@ public abstract class FileOutConfig {
      * 模板
      */
     private String templatePath;
+    /**
+     * 重命文件
+     */
+    private static String copyName = "2";
 
     public FileOutConfig() {
         // to do nothing
@@ -46,4 +50,14 @@ public abstract class FileOutConfig {
      * 输出文件
      */
     public abstract String outputFile(TableInfo tableInfo);
+
+    /**
+     * 重命名
+     * @param outputFile
+     * @return
+     */
+    public static String getOutputFile(String outputFile) {
+        int i = outputFile.lastIndexOf(".");
+        return outputFile.substring(0, i) + copyName + outputFile.substring(i);
+    }
 }
