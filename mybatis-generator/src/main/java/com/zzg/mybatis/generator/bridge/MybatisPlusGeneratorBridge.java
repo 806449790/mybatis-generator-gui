@@ -48,14 +48,6 @@ public class MybatisPlusGeneratorBridge {
     public MybatisPlusGeneratorBridge() {
     }
 
-    public static void main(String[] args) {
-        String str  ="adsf.fd.sdf";
-        String[] moduleParents = str.split(".");
-        String str1=str.substring(0, str.lastIndexOf("."));
-        System.out.println("----"+str1);
-
-    }
-
     public void generate() throws Exception {
         // 代码生成器
         AutoGenerator mpg = new AutoGenerator();
