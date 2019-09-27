@@ -25,7 +25,10 @@ import java.util.List;
  * The bridge between GUI and the mybatis generator. All the operation to  mybatis generator should proceed through this
  * class
  * <p>
- * Created by Owen on 6/30/16.
+ /**
+ * @Description
+ * @Author HHJ
+ * @Date 2019-09-27 14:20
  */
 public class MybatisPlusGeneratorBridge {
 
