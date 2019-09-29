@@ -20,10 +20,6 @@ import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
  * @Date 2019-09-27 14:20
  */
 public class ServiceImplPlugin extends PluginAdapter {
-    private static final FullyQualifiedJavaType PARAM_ANNOTATION_TYPE = new FullyQualifiedJavaType("org.apache.ibatis.annotations.Param");
-    private static final FullyQualifiedJavaType LIST_TYPE = FullyQualifiedJavaType.getNewListInstance();
-    private static final FullyQualifiedJavaType SERIALIZEBLE_TYPE = new FullyQualifiedJavaType("java.io.Serializable");
-
     private List<Method> methods = new ArrayList<>();
 
     private ShellCallback shellCallback = null;
@@ -51,9 +47,8 @@ public class ServiceImplPlugin extends PluginAdapter {
         FullyQualifiedJavaType baseExampleType = new FullyQualifiedJavaType(String.format(ConfigManage.DEFAULT_SERVICE, tableName));
         mapperInterface.setSuperClass(baseExampleType);
         if (stringHasValue(daoTargetPackage)) {
-            mapperInterface.addImportedType(PARAM_ANNOTATION_TYPE);
-            mapperInterface.addImportedType(LIST_TYPE);
-            mapperInterface.addImportedType(SERIALIZEBLE_TYPE);
+            mapperInterface.addImportedType("org.springframework.stereotype.Service");
+            mapperInterface.addAnnotation("@Service");
             mapperInterface.addImportedType(ConfigManage.getServiceName(daoTargetPackage, tableName));
             FullyQualifiedJavaType srv = new FullyQualifiedJavaType("java.io.Serializable");
             mapperInterface.addImportedType(srv);
