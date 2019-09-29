@@ -269,6 +269,12 @@ public class MybatisGeneratorBridge {
             pluginConfiguration4.addProperty("type", "com.zzg.mybatis.generator.myplus.ApplicationPlugin");
             pluginConfiguration4.setConfigurationType("com.zzg.mybatis.generator.myplus.ApplicationPlugin");
             context.addPluginConfiguration(pluginConfiguration4);
+
+            //添加ConfigPlugin
+            PluginConfiguration pluginConfiguration5 = new PluginConfiguration();
+            pluginConfiguration5.addProperty("type", "com.zzg.mybatis.generator.myplus.ConfigPlugin");
+            pluginConfiguration5.setConfigurationType("com.zzg.mybatis.generator.myplus.ConfigPlugin");
+            context.addPluginConfiguration(pluginConfiguration5);
         }
         //覆盖默认的TargetRuntime
         if (ConfigManage.myPlusIfOpen) {

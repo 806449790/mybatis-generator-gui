@@ -22,16 +22,20 @@ import java.util.Properties;
 public class ConfigManage {
     private static final Logger log = LoggerFactory.getLogger(ConfigManage.class);
 
+    public static final String dataSourceConfigPackage = "config";
     public static final String controllerPackage = "controller";
     public static final String servicePackage = "service";
     public static final String serviceImplPackage = servicePackage + ".impl";
 
+    public static final String DATASOURCE_CONFIG_NAME = ".%sDataSourceConfig";
     public static final String DEFAULT_SERVICE_IMPL_NAME = ".%sServiceImpl";
     public static final String DEFAULT_SERVICE = "I%sService";
     public static final String DEFAULT_SERVICE_NAME = ".I%sService";
     public static final String DEFAULT_CONTROLLER_NAME = ".%sController";
-    public static final String str = "yyy-MM-dd HH:mm:ss";
-    public static final SimpleDateFormat sdf = new SimpleDateFormat(str);
+
+    public static final String author = "HHJ";
+
+    public static final SimpleDateFormat sdf = new SimpleDateFormat("yyy-MM-dd HH:mm:ss");
 
     /**
      * 自定义扩展的开关
@@ -53,8 +57,12 @@ public class ConfigManage {
     public static String getAuth() {
         Date date = new Date();
         return  " * @Description\n" +
-                " * @Author HHJ\n" +
+                " * @Author " + author + "\n" +
                 " * @Date " + sdf.format(date);
+    }
+
+    public static String getDataSourceConfigPackage(String daoTargetPackage) {
+        return ConfigManage.getDaoTargetPackage(daoTargetPackage, ConfigManage.dataSourceConfigPackage) + String.format(ConfigManage.DATASOURCE_CONFIG_NAME, "Druid");
     }
 
     public static String getServicePackage(String daoTargetPackage, String tableName) {
@@ -76,6 +84,7 @@ public class ConfigManage {
 
     /**
      * 去掉了Entity
+     *
      * @param context
      * @return
      */
@@ -83,6 +92,7 @@ public class ConfigManage {
         String domainObjectName = getDomainObjectName(context);
         return domainObjectName.replace("Entity", "");
     }
+
     public static String getDomainObjectName(Context context) {
         String domainObjectName = context.getTableConfigurations().get(0).getDomainObjectName();
         return domainObjectName;
