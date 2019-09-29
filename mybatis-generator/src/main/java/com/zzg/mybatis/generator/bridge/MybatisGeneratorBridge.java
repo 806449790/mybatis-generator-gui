@@ -246,6 +246,24 @@ public class MybatisGeneratorBridge {
         }
 
         context.setTargetRuntime("MyBatis3");
+        // hhj 20190929 添加插件
+        if (true) {
+            //添加ServiceImplPlugin
+            PluginConfiguration pluginConfiguration1 = new PluginConfiguration();
+            pluginConfiguration1.addProperty("type", "com.zzg.mybatis.generator.myplus.ServiceImplPlugin");
+            pluginConfiguration1.setConfigurationType("com.zzg.mybatis.generator.myplus.ServiceImplPlugin");
+            context.addPluginConfiguration(pluginConfiguration1);
+            //添加ServiceInterfacePlugin
+            PluginConfiguration pluginConfiguration2 = new PluginConfiguration();
+            pluginConfiguration2.addProperty("type", "com.zzg.mybatis.generator.myplus.ServiceInterfacePlugin");
+            pluginConfiguration2.setConfigurationType("com.zzg.mybatis.generator.myplus.ServiceInterfacePlugin");
+            context.addPluginConfiguration(pluginConfiguration2);
+            //添加ControllerPlugin
+            PluginConfiguration pluginConfiguration3 = new PluginConfiguration();
+            pluginConfiguration3.addProperty("type", "com.zzg.mybatis.generator.myplus.ControllerPlugin");
+            pluginConfiguration3.setConfigurationType("com.zzg.mybatis.generator.myplus.ControllerPlugin");
+            context.addPluginConfiguration(pluginConfiguration3);
+        }
         //覆盖默认的TargetRuntime
         if (ConfigManage.myPlusIfOpen) {
             context.setTargetRuntime(ConfigManage.myTargetRuntime);

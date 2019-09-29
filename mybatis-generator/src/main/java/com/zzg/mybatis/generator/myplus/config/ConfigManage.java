@@ -1,12 +1,15 @@
 package com.zzg.mybatis.generator.myplus.config;
 
 import org.apache.commons.lang3.StringUtils;
+import org.mybatis.generator.config.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 
 /**
@@ -18,6 +21,17 @@ import java.util.Properties;
  */
 public class ConfigManage {
     private static final Logger log = LoggerFactory.getLogger(ConfigManage.class);
+
+    public static final String controllerPackage = "controller";
+    public static final String servicePackage = "service";
+    public static final String serviceImplPackage = servicePackage + ".impl";
+
+    public static final String DEFAULT_SERVICE_IMPL_NAME = ".%sServiceImpl";
+    public static final String DEFAULT_SERVICE = "I%sService";
+    public static final String DEFAULT_SERVICE_NAME = ".I%sService";
+    public static final String DEFAULT_CONTROLLER_NAME = ".%sController";
+    public static final String str = "yyy-MM-dd HH:mm:ss";
+    public static final SimpleDateFormat sdf = new SimpleDateFormat(str);
 
     /**
      * 自定义扩展的开关
@@ -35,6 +49,35 @@ public class ConfigManage {
      * 配置文件
      */
     private static Properties prop;
+
+    public static String getAuth() {
+        Date date = new Date();
+        return  " * @Description\n" +
+                " * @Author HHJ\n" +
+                " * @Date " + sdf.format(date);
+    }
+
+    public static String getServiceName(String daoTargetPackage, String tableName) {
+        return ConfigManage.getDaoTargetPackage(daoTargetPackage, ConfigManage.servicePackage) + String.format(ConfigManage.DEFAULT_SERVICE_NAME, tableName);
+    }
+
+    public static String getServiceImplName(String daoTargetPackage, String tableName) {
+        return ConfigManage.getDaoTargetPackage(daoTargetPackage, ConfigManage.serviceImplPackage) + String.format(ConfigManage.DEFAULT_SERVICE_IMPL_NAME, tableName);
+    }
+
+    public static String getControllerName(String daoTargetPackage, String tableName) {
+        return ConfigManage.getDaoTargetPackage(daoTargetPackage, ConfigManage.controllerPackage) + String.format(ConfigManage.DEFAULT_CONTROLLER_NAME, tableName);
+    }
+
+    public static String getDaoTargetPackage(String daoTargetPackage, String path) {
+        int i = daoTargetPackage.lastIndexOf(".");
+        return daoTargetPackage.substring(0, i) + "." + path;
+    }
+
+    public static String getDomainObjectName(Context context) {
+        String domainObjectName = context.getTableConfigurations().get(0).getDomainObjectName();
+        return domainObjectName.replace("Entity", "");
+    }
 
     /**
      * 加载配置文件
