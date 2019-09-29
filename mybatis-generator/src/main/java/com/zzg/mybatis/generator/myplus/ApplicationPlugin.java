@@ -3,6 +3,7 @@ package com.zzg.mybatis.generator.myplus;
 import com.zzg.mybatis.generator.myplus.config.ConfigManage;
 import org.mybatis.generator.api.*;
 import org.mybatis.generator.api.dom.java.*;
+import org.mybatis.generator.config.JavaClientGeneratorConfiguration;
 import org.mybatis.generator.exception.ShellException;
 import org.mybatis.generator.internal.DefaultShellCallback;
 
@@ -13,19 +14,18 @@ import java.util.List;
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
 /**
- * ServiceInterfacePlugin
+ * ApplicationPlugin
  *
  * @Description
  * @Author HHJ
  * @Date 2019-09-27 14:20
  */
-public class ServiceInterfacePlugin extends PluginAdapter {
+public class ApplicationPlugin extends PluginAdapter {
     private List<Method> methods = new ArrayList<>();
 
     private ShellCallback shellCallback = null;
-    private static final FullyQualifiedJavaType LIST_TYPE = FullyQualifiedJavaType.getNewListInstance();
 
-    public ServiceInterfacePlugin() {
+    public ApplicationPlugin() {
         shellCallback = new DefaultShellCallback(false);
     }
 
@@ -37,38 +37,51 @@ public class ServiceInterfacePlugin extends PluginAdapter {
     public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles(IntrospectedTable introspectedTable) {
         boolean hasPk = introspectedTable.hasPrimaryKeyColumns();
         JavaFormatter javaFormatter = context.getJavaFormatter();
+
         String daoTargetDir = context.getJavaClientGeneratorConfiguration().getTargetProject();
         String daoTargetPackage = context.getJavaClientGeneratorConfiguration().getTargetPackage();
         List<GeneratedJavaFile> mapperJavaFiles = new ArrayList<>();
         String javaFileEncoding = context.getProperty("javaFileEncoding");
-        String tableName = ConfigManage.getDomainNameNoEntity(context);
-        String entityPackage = context.getJavaModelGeneratorConfiguration().getTargetPackage();
-        String servicePackage = ConfigManage.getServicePackage(daoTargetPackage, tableName);
 
-        Interface mapperInterface = new Interface(servicePackage);
-        String entityName = ConfigManage.getDomainObjectName(context);
+        String entityNameNoEntity = ConfigManage.getDomainNameNoEntity(context);
+        JavaClientGeneratorConfiguration mapperConfig = context.getJavaClientGeneratorConfiguration();
+        String mapperPackage = mapperConfig.getTargetPackage();
+        String applicationName = entityNameNoEntity + "Application";
+        String applicationPackage = mapperPackage.substring(0, mapperPackage.lastIndexOf(".")) + "." + applicationName;
+        FullyQualifiedJavaType type3 = new FullyQualifiedJavaType(applicationPackage);
+        TopLevelClass mapperInterface = new TopLevelClass(type3);
+
         if (stringHasValue(daoTargetPackage)) {
-            mapperInterface.setVisibility(JavaVisibility.PUBLIC);
-            mapperInterface.addImportedType(LIST_TYPE);
-            mapperInterface.addImportedType(new FullyQualifiedJavaType(entityPackage + "." + entityName));
-            mapperInterface.addJavaDocLine("/**");
-            mapperInterface.addJavaDocLine(" * " + "接口");
-            mapperInterface.addJavaDocLine(ConfigManage.getAuth());
-            if (isUseExample()) {
-                mapperInterface.addJavaDocLine(" * " + "@param <E> The Example Class");
-            }
-            mapperInterface.addJavaDocLine(" */");
-            addEntity(mapperInterface, entityName);
-            selectByEntity(mapperInterface, entityName);
+            mapperInterface.addImportedType("com.ctrip.framework.apollo.spring.annotation.EnableApolloConfig");
+            mapperInterface.addImportedType("org.mybatis.spring.annotation.MapperScan");
+            mapperInterface.addImportedType("io.swagger.annotations.ApiOperation");
+            mapperInterface.addImportedType("org.springframework.boot.autoconfigure.SpringBootApplication");
+            mapperInterface.addImportedType("org.springframework.boot.builder.SpringApplicationBuilder");
+            mapperInterface.addImportedType("org.springframework.cloud.client.discovery.EnableDiscoveryClient");
+            mapperInterface.addImportedType("org.springframework.context.ConfigurableApplicationContext");
+            mapperInterface.addImportedType("org.springframework.context.annotation.Bean");
+            mapperInterface.addImportedType("springfox.documentation.swagger2.annotations.EnableSwagger2");
+            mapperInterface.addImportedType("springfox.documentation.spring.web.plugins.Docket");
+            mapperInterface.addImportedType("springfox.documentation.spi.DocumentationType");
+            mapperInterface.addImportedType("springfox.documentation.builders.ApiInfoBuilder");
+            mapperInterface.addImportedType("springfox.documentation.builders.RequestHandlerSelectors");
 
-            List<GeneratedJavaFile> generatedJavaFiles = introspectedTable.getGeneratedJavaFiles();
-            for (GeneratedJavaFile generatedJavaFile : generatedJavaFiles) {
-                CompilationUnit compilationUnit = generatedJavaFile.getCompilationUnit();
-                FullyQualifiedJavaType type = compilationUnit.getType();
-                String modelName = type.getShortName();
-                if (modelName.endsWith("DAO")) {
-                }
-            }
+            mapperInterface.addAnnotation("@SpringBootApplication");
+            mapperInterface.addAnnotation("@EnableDiscoveryClient");
+            mapperInterface.addAnnotation("@EnableApolloConfig");
+            mapperInterface.addAnnotation("@EnableSwagger2");
+            mapperInterface.addAnnotation("@MapperScan(basePackages = {\"" + mapperPackage + "\"})");
+
+            mapperInterface.setVisibility(JavaVisibility.PUBLIC);
+            mapperInterface.addJavaDocLine("/**");
+            mapperInterface.addJavaDocLine(" * " + entityNameNoEntity + " 服务运行程序");
+            mapperInterface.addJavaDocLine(ConfigManage.getAuth());
+            mapperInterface.addJavaDocLine(" */");
+
+            getMain(applicationName, mapperInterface);
+            getRestApi(applicationName, mapperInterface, entityNameNoEntity);
+
+
             GeneratedJavaFile mapperJavafile = new GeneratedJavaFile(mapperInterface, daoTargetDir, javaFileEncoding, javaFormatter);
             try {
                 File mapperDir = shellCallback.getDirectory(daoTargetDir, daoTargetPackage);
@@ -84,38 +97,39 @@ public class ServiceInterfacePlugin extends PluginAdapter {
         return mapperJavaFiles;
     }
 
-    private void addEntity(Interface mapperInterface, String entityName) {
+    private void getRestApi(String applicationName, TopLevelClass mapperInterface, String entityNameNoEntity) {
         Method method = new Method();
-        method.setConstructor(false);
-        FullyQualifiedJavaType returnType = new FullyQualifiedJavaType("Integer");
+        FullyQualifiedJavaType returnType = new FullyQualifiedJavaType("Docket");
         method.setReturnType(returnType);
-        method.setName("addEntity");
-
-        method.addJavaDocLine("/**\n" +
-                "     * " + method.getName() + "\n" +
-                "     *\n" +
-                "     * @param entity\n" +
-                "     * @return Integer\n" +
-                "     */");
+        method.setName("restApi");
+        method.addAnnotation("@Bean");
+        method.setVisibility(JavaVisibility.PUBLIC);
         method.getParameters().clear();
-        method.addParameter(new Parameter(new FullyQualifiedJavaType(entityName), "entity"));
+        List list = new ArrayList();
+        list.add("return new Docket(DocumentationType.SWAGGER_2)\n" +
+                "                    .apiInfo(new ApiInfoBuilder()\n" +
+                "                            .title(\"" + entityNameNoEntity + "-服务接口\")\n" +
+                "                            .description(\"" + entityNameNoEntity + "服务接口\")\n" +
+                "                            .build())\n" +
+                "                    .select().apis(RequestHandlerSelectors.withMethodAnnotation(ApiOperation.class))\n" +
+                "                    .build();");
+        method.addBodyLines(list);
         mapperInterface.addMethod(method);
+
     }
 
-    private void selectByEntity(Interface mapperInterface, String entityName) {
+    private void getMain(String applicationName, TopLevelClass mapperInterface) {
         Method method = new Method();
-        method.setConstructor(false);
-        FullyQualifiedJavaType returnType = new FullyQualifiedJavaType("List<" + entityName + ">");
-        method.setReturnType(returnType);
-        method.setName("selectByEntity");
-        method.addJavaDocLine("/**\n" +
-                "     * " + method.getName() + "\n" +
-                "     *\n" +
-                "     * @param entity\n" +
-                "     * @return List\n" +
-                "     */");
+        method.setReturnType(null);
+        method.setName("main");
+        method.setVisibility(JavaVisibility.PUBLIC);
         method.getParameters().clear();
-        method.addParameter(new Parameter(new FullyQualifiedJavaType(entityName), "entity"));
+        method.setStatic(true);
+        method.addParameter(new Parameter(new FullyQualifiedJavaType("String[]"), "args"));
+        List list = new ArrayList();
+        list.add("ConfigurableApplicationContext app = new SpringApplicationBuilder(" + applicationName + ".class).run(args);");
+        list.add("System.out.println(app.getEnvironment().getProperty(\"spring.application.name\") + \"服务启动完毕...\");");
+        method.addBodyLines(list);
         mapperInterface.addMethod(method);
     }
 
@@ -126,7 +140,11 @@ public class ServiceInterfacePlugin extends PluginAdapter {
     }
 
     private void interceptExampleParam(Method method) {
-
+        if (isUseExample()) {
+            method.getParameters().clear();
+            method.addParameter(new Parameter(new FullyQualifiedJavaType("E"), "example"));
+            methods.add(method);
+        }
     }
 
     private void interceptPrimaryKeyParam(Method method) {

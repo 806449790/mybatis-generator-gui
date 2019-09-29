@@ -3,6 +3,7 @@ package com.zzg.mybatis.generator.myplus;
 import com.zzg.mybatis.generator.myplus.config.ConfigManage;
 import org.mybatis.generator.api.*;
 import org.mybatis.generator.api.dom.java.*;
+import org.mybatis.generator.config.JavaClientGeneratorConfiguration;
 import org.mybatis.generator.exception.ShellException;
 import org.mybatis.generator.internal.DefaultShellCallback;
 
@@ -13,7 +14,7 @@ import java.util.List;
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
 /**
- * Project: mybatis-generator-gui
+ * ServiceImplPlugin
  *
  * @Description
  * @Author HHJ
@@ -24,6 +25,7 @@ public class ServiceImplPlugin extends PluginAdapter {
 
     private ShellCallback shellCallback = null;
 
+    private static final FullyQualifiedJavaType LIST_TYPE = FullyQualifiedJavaType.getNewListInstance();
     public ServiceImplPlugin() {
         shellCallback = new DefaultShellCallback(false);
     }
@@ -36,37 +38,53 @@ public class ServiceImplPlugin extends PluginAdapter {
     public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles(IntrospectedTable introspectedTable) {
         boolean hasPk = introspectedTable.hasPrimaryKeyColumns();
         JavaFormatter javaFormatter = context.getJavaFormatter();
+        JavaClientGeneratorConfiguration mapperConfig = context.getJavaClientGeneratorConfiguration();
+        String mapperPackage = mapperConfig.getTargetPackage();
         String daoTargetDir = context.getJavaClientGeneratorConfiguration().getTargetProject();
         String daoTargetPackage = context.getJavaClientGeneratorConfiguration().getTargetPackage();
         List<GeneratedJavaFile> mapperJavaFiles = new ArrayList<>();
         String javaFileEncoding = context.getProperty("javaFileEncoding");
-        String tableName = ConfigManage.getDomainObjectName(context);
-        String name = ConfigManage.getServiceImplName(daoTargetPackage, tableName);
-        FullyQualifiedJavaType type3 = new FullyQualifiedJavaType(name);
+        String domainNameNoEntity = ConfigManage.getDomainNameNoEntity(context);
+        String entityPackage = context.getJavaModelGeneratorConfiguration().getTargetPackage();
+        //自动注入的mapper变量名;
+        String mapper = "mapper";
+        String entityName = ConfigManage.getDomainObjectName(context);
+        String serviceName = String.format(ConfigManage.DEFAULT_SERVICE, domainNameNoEntity);
+        String serviceImplPackage = ConfigManage.getServiceImplPackage(daoTargetPackage, domainNameNoEntity);
+        FullyQualifiedJavaType type3 = new FullyQualifiedJavaType(serviceImplPackage);
         TopLevelClass mapperInterface = new TopLevelClass(type3);
-        FullyQualifiedJavaType baseExampleType = new FullyQualifiedJavaType(String.format(ConfigManage.DEFAULT_SERVICE, tableName));
-        mapperInterface.setSuperClass(baseExampleType);
+        FullyQualifiedJavaType baseExampleType = new FullyQualifiedJavaType(serviceName);
+        mapperInterface.addSuperInterface(baseExampleType);
         if (stringHasValue(daoTargetPackage)) {
+            mapperInterface.addImportedType(LIST_TYPE);
             mapperInterface.addImportedType("org.springframework.stereotype.Service");
+            mapperInterface.addImportedType("java.lang.Override");
+            mapperInterface.addImportedType("org.springframework.beans.factory.annotation.Autowired");
+            mapperInterface.addImportedType(mapperPackage + "." + domainNameNoEntity + "Mapper");
+            mapperInterface.addImportedType(entityPackage + "." + entityName);
             mapperInterface.addAnnotation("@Service");
-            mapperInterface.addImportedType(ConfigManage.getServiceName(daoTargetPackage, tableName));
+            mapperInterface.addImportedType(ConfigManage.getServicePackage(daoTargetPackage, domainNameNoEntity));
             FullyQualifiedJavaType srv = new FullyQualifiedJavaType("java.io.Serializable");
             mapperInterface.addImportedType(srv);
 
             mapperInterface.setVisibility(JavaVisibility.PUBLIC);
             mapperInterface.addJavaDocLine("/**");
-            mapperInterface.addJavaDocLine(" * " + String.format(ConfigManage.DEFAULT_SERVICE, tableName) + "实现类");
+            mapperInterface.addJavaDocLine(" * " + serviceName + "实现类");
             mapperInterface.addJavaDocLine(ConfigManage.getAuth());
             if (isUseExample()) {
                 mapperInterface.addJavaDocLine(" * " + "@param <E> The Example Class");
             }
             mapperInterface.addJavaDocLine(" */");
+            Field field = new Field();
+            field.addAnnotation("@Autowired");
+            FullyQualifiedJavaType mapperJavaType = new FullyQualifiedJavaType(domainNameNoEntity + "Mapper");
+            field.setType(mapperJavaType);
+            field.setName(mapper);
+            field.setVisibility(JavaVisibility.PRIVATE);
+            mapperInterface.addField(field);
 
-            if (!this.methods.isEmpty()) {
-                for (Method method : methods) {
-                    mapperInterface.addMethod(method);
-                }
-            }
+            addEntity(mapperInterface, mapper, entityName);
+            selectByEntity(mapperInterface, mapper, entityName);
 
             List<GeneratedJavaFile> generatedJavaFiles = introspectedTable.getGeneratedJavaFiles();
             for (GeneratedJavaFile generatedJavaFile : generatedJavaFiles) {
@@ -89,6 +107,40 @@ public class ServiceImplPlugin extends PluginAdapter {
             }
         }
         return mapperJavaFiles;
+    }
+
+    private void addEntity(TopLevelClass mapperInterface, String mapper, String entityName) {
+        Method method = new Method();
+        method.setVisibility(JavaVisibility.PUBLIC);
+        FullyQualifiedJavaType returnType = new FullyQualifiedJavaType("Integer");
+        method.setReturnType(returnType);
+        method.setName("addEntity");
+        method.addAnnotation("@Override");
+        String entity = "entity";
+        method.getParameters().clear();
+        Parameter parameter = new Parameter(new FullyQualifiedJavaType(entityName), entity);
+        method.addParameter(parameter);
+        List list = new ArrayList();
+        list.add("Integer res = " + mapper + ".insert(" + entity + ");");
+        list.add("return res;");
+        method.addBodyLines(list);
+        mapperInterface.addMethod(method);
+    }
+
+    private void selectByEntity(TopLevelClass mapperInterface, String mapper, String entityName) {
+        Method method = new Method();
+        FullyQualifiedJavaType returnType = new FullyQualifiedJavaType("List<" + entityName + ">");
+        method.setReturnType(returnType);
+        method.setName("selectByEntity");
+        method.setVisibility(JavaVisibility.PUBLIC);
+        method.addAnnotation("@Override");
+        String entity = "entity";
+        method.getParameters().clear();
+        method.addParameter(new Parameter(new FullyQualifiedJavaType(entityName), entity));
+        List list = new ArrayList();
+        list.add("return " + mapper + ".selectByEntity(" + entity + ");");
+        method.addBodyLines(list);
+        mapperInterface.addMethod(method);
     }
 
 

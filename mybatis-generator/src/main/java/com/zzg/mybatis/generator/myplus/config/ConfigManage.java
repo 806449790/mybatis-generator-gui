@@ -57,15 +57,15 @@ public class ConfigManage {
                 " * @Date " + sdf.format(date);
     }
 
-    public static String getServiceName(String daoTargetPackage, String tableName) {
+    public static String getServicePackage(String daoTargetPackage, String tableName) {
         return ConfigManage.getDaoTargetPackage(daoTargetPackage, ConfigManage.servicePackage) + String.format(ConfigManage.DEFAULT_SERVICE_NAME, tableName);
     }
 
-    public static String getServiceImplName(String daoTargetPackage, String tableName) {
+    public static String getServiceImplPackage(String daoTargetPackage, String tableName) {
         return ConfigManage.getDaoTargetPackage(daoTargetPackage, ConfigManage.serviceImplPackage) + String.format(ConfigManage.DEFAULT_SERVICE_IMPL_NAME, tableName);
     }
 
-    public static String getControllerName(String daoTargetPackage, String tableName) {
+    public static String getControllerPackage(String daoTargetPackage, String tableName) {
         return ConfigManage.getDaoTargetPackage(daoTargetPackage, ConfigManage.controllerPackage) + String.format(ConfigManage.DEFAULT_CONTROLLER_NAME, tableName);
     }
 
@@ -74,9 +74,18 @@ public class ConfigManage {
         return daoTargetPackage.substring(0, i) + "." + path;
     }
 
+    /**
+     * 去掉了Entity
+     * @param context
+     * @return
+     */
+    public static String getDomainNameNoEntity(Context context) {
+        String domainObjectName = getDomainObjectName(context);
+        return domainObjectName.replace("Entity", "");
+    }
     public static String getDomainObjectName(Context context) {
         String domainObjectName = context.getTableConfigurations().get(0).getDomainObjectName();
-        return domainObjectName.replace("Entity", "");
+        return domainObjectName;
     }
 
     /**

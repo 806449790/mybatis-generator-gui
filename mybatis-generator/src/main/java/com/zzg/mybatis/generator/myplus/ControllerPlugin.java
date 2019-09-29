@@ -13,7 +13,7 @@ import java.util.List;
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
 /**
- * Project: mybatis-generator-gui
+ * ControllerPlugin
  *
  * @Description
  * @Author HHJ
@@ -22,7 +22,7 @@ import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 public class ControllerPlugin extends PluginAdapter {
 
     private List<Method> methods = new ArrayList<>();
-
+    private static final FullyQualifiedJavaType LIST_TYPE = FullyQualifiedJavaType.getNewListInstance();
     private ShellCallback shellCallback = null;
 
     public ControllerPlugin() {
@@ -41,16 +41,31 @@ public class ControllerPlugin extends PluginAdapter {
         String daoTargetPackage = context.getJavaClientGeneratorConfiguration().getTargetPackage();
         List<GeneratedJavaFile> mapperJavaFiles = new ArrayList<>();
         String javaFileEncoding = context.getProperty("javaFileEncoding");
-        String tableName = ConfigManage.getDomainObjectName(context);
-        String name = ConfigManage.getControllerName(daoTargetPackage, tableName);
+        String tableName = ConfigManage.getDomainNameNoEntity(context);
+        String name = ConfigManage.getControllerPackage(daoTargetPackage, tableName);
         FullyQualifiedJavaType type3 = new FullyQualifiedJavaType(name);
         TopLevelClass mapperInterface = new TopLevelClass(type3);
-
+        String domainNameNoEntity = ConfigManage.getDomainNameNoEntity(context);
+        String entityPackage = context.getJavaModelGeneratorConfiguration().getTargetPackage();
+        //自动注入的mapper变量名;
+        String service = "service";
+        String entityName = ConfigManage.getDomainObjectName(context);
+        String serviceName = String.format(ConfigManage.DEFAULT_SERVICE, domainNameNoEntity);
         if (stringHasValue(daoTargetPackage)) {
+            mapperInterface.addImportedType(LIST_TYPE);
             mapperInterface.addImportedType("io.swagger.annotations.Api");
             mapperInterface.addImportedType("lombok.extern.slf4j.Slf4j");
+            mapperInterface.addImportedType("io.swagger.annotations.ApiOperation");
             mapperInterface.addImportedType("org.springframework.web.bind.annotation.RestController");
             mapperInterface.addImportedType("org.springframework.web.bind.annotation.RequestMapping");
+            mapperInterface.addImportedType("com.kanghe.ncdcloud.component.common.base.BaseResult");
+            mapperInterface.addImportedType("org.springframework.beans.factory.annotation.Autowired");
+            mapperInterface.addImportedType("org.springframework.http.MediaType");
+            mapperInterface.addImportedType("io.swagger.annotations.ApiParam");
+            mapperInterface.addImportedType("org.springframework.web.bind.annotation.RequestBody");
+            mapperInterface.addImportedType("org.springframework.web.bind.annotation.RequestMethod");
+            mapperInterface.addImportedType(ConfigManage.getServicePackage(daoTargetPackage, domainNameNoEntity));
+            mapperInterface.addImportedType(entityPackage + "." + entityName);
 
             mapperInterface.setVisibility(JavaVisibility.PUBLIC);
             mapperInterface.addJavaDocLine("/**");
@@ -67,11 +82,17 @@ public class ControllerPlugin extends PluginAdapter {
             chars[0] += 32;
             mapperInterface.addAnnotation("@RequestMapping(\"/" + String.valueOf(chars) + "\")");
 
-            if (!this.methods.isEmpty()) {
-                for (Method method : methods) {
-                    mapperInterface.addMethod(method);
-                }
-            }
+            Field field = new Field();
+            field.addAnnotation("@Autowired");
+            FullyQualifiedJavaType mapperJavaType = new FullyQualifiedJavaType(serviceName);
+            field.setType(mapperJavaType);
+            field.setName(service);
+            field.setVisibility(JavaVisibility.PRIVATE);
+            mapperInterface.addField(field);
+
+            addEntity(mapperInterface, service, entityName);
+            selectByEntity(mapperInterface, service, entityName);
+
 
             List<GeneratedJavaFile> generatedJavaFiles = introspectedTable.getGeneratedJavaFiles();
             for (GeneratedJavaFile generatedJavaFile : generatedJavaFiles) {
@@ -94,6 +115,47 @@ public class ControllerPlugin extends PluginAdapter {
             }
         }
         return mapperJavaFiles;
+    }
+    private void addEntity(TopLevelClass mapperInterface, String service, String entityName) {
+        Method method = new Method();
+        FullyQualifiedJavaType returnType = new FullyQualifiedJavaType("BaseResult<?>");
+        method.setReturnType(returnType);
+        method.setName("addEntity");
+        method.setVisibility(JavaVisibility.PUBLIC);
+        method.addAnnotation("@ApiOperation(value = \"新增\", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)");
+        method.addAnnotation("@RequestMapping(value = \"/" + method.getName() + "\", method = RequestMethod.POST)");
+        String entity = "entity";
+        method.getParameters().clear();
+        Parameter parameter = new Parameter(new FullyQualifiedJavaType(entityName), entity);
+        parameter.addAnnotation("@ApiParam");
+        parameter.addAnnotation("@RequestBody");
+        method.addParameter(parameter);
+        List list = new ArrayList();
+        list.add("Integer res = " + service + "."+method.getName()+"(" + entity + ");");
+        list.add("return BaseResult.buildSuccess(res);");
+        method.addBodyLines(list);
+        mapperInterface.addMethod(method);
+    }
+
+    private void selectByEntity(TopLevelClass mapperInterface, String service, String entityName) {
+        Method method = new Method();
+        FullyQualifiedJavaType returnType = new FullyQualifiedJavaType("BaseResult<?>");
+        method.setReturnType(returnType);
+        method.setName("selectByEntity");
+        method.setVisibility(JavaVisibility.PUBLIC);
+        method.addAnnotation("@ApiOperation(value = \"查询列表\", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)");
+        method.addAnnotation("@RequestMapping(value = \"/" + method.getName() + "\", method = RequestMethod.POST)");
+        String entity = "entity";
+        method.getParameters().clear();
+        Parameter parameter = new Parameter(new FullyQualifiedJavaType(entityName), entity);
+        parameter.addAnnotation("@ApiParam");
+        parameter.addAnnotation("@RequestBody");
+        method.addParameter(parameter);
+        List list = new ArrayList();
+        list.add("List<?> res = " + service + ".selectByEntity(" + entity + ");");
+        list.add("return BaseResult.buildSuccess(res);");
+        method.addBodyLines(list);
+        mapperInterface.addMethod(method);
     }
 
     @Override
